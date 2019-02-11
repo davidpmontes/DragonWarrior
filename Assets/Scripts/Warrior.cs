@@ -16,6 +16,7 @@ public class Warrior : MonoBehaviour
     private Vector2 moveLocation;
 
     private readonly float MOVE_SPEED = 3f;
+    private readonly float HOLD_KEY_LENGTH = 0.1f;
 
     private List<string> MoveableTiles;
     private Dictionary<string, float> MoveDelay;
@@ -25,6 +26,9 @@ public class Warrior : MonoBehaviour
     private string UpTile;
     private string DownTile;
 
+    private bool isNoInput;
+    private float holdKeyDelay;
+
     private void Start()
     {
         animator = GetComponent<Animator>();
@@ -33,10 +37,11 @@ public class Warrior : MonoBehaviour
         MoveableTiles.Add("plain");
         MoveableTiles.Add("trees");
         MoveableTiles.Add("hills");
+        MoveableTiles.Add("cave");
+        MoveableTiles.Add("castle");
+        MoveableTiles.Add("town");
 
         MoveDelay = new Dictionary<string, float>();
-        MoveDelay.Add("plain", 0f);
-        MoveDelay.Add("trees", 0f);
         MoveDelay.Add("hills", 0.1f);
 
         moveLocation = Vector2.zero;
@@ -81,28 +86,51 @@ public class Warrior : MonoBehaviour
             DownTile = tilemap.GetTile(new Vector3Int(Mathf.FloorToInt(transform.position.x),
                                                       Mathf.FloorToInt(transform.position.y) - 1, 0)).name;
 
-            if (horizontal_input == -1 && MoveableTiles.Contains(LeftTile))
+            if (horizontal_input == -1)
             {
-                moveLocation += new Vector2(-1, 0);
                 animator.Play("WalkLeft");
+
+                if (!KeyHeldLongEnough())
+                    return;
+
+                if (MoveableTiles.Contains(LeftTile))
+                {
+                    moveLocation += new Vector2(-1, 0);
+                }
             }
-            else if (horizontal_input == 1 && MoveableTiles.Contains(RightTile))
+            else if (horizontal_input == 1)
             {
-                moveLocation += new Vector2(1, 0);
                 animator.Play("WalkRight");
+
+                if (!KeyHeldLongEnough())
+                    return;
+
+                if (MoveableTiles.Contains(RightTile))
+                    moveLocation += new Vector2(1, 0);
             }
-            else if (vertical_input == 1 && MoveableTiles.Contains(UpTile))
+            else if (vertical_input == 1)
             {
-                moveLocation += new Vector2(0, 1);
                 animator.Play("WalkUp");
+
+                if (!KeyHeldLongEnough())
+                    return;
+
+                if (MoveableTiles.Contains(UpTile))
+                    moveLocation += new Vector2(0, 1);
             }
-            else if (vertical_input == -1 && MoveableTiles.Contains(DownTile))
+            else if (vertical_input == -1)
             {
-                moveLocation += new Vector2(0, -1);
                 animator.Play("WalkDown");
+
+                if (!KeyHeldLongEnough())
+                    return;
+
+                if (MoveableTiles.Contains(DownTile))
+                    moveLocation += new Vector2(0, -1);
             }
             else
             {
+                isNoInput = true;
                 return;
             }
 
@@ -115,12 +143,17 @@ public class Warrior : MonoBehaviour
         {
             transform.position = moveLocation;
             isMoving = false;
-            float delayTime = MoveDelay[(tilemap.GetTile(new Vector3Int(Mathf.FloorToInt(transform.position.x),
-                                                          Mathf.FloorToInt(transform.position.y), 0)).name)];
-            if (delayTime > 0)
+
+            if (MoveDelay.ContainsKey((tilemap.GetTile(new Vector3Int(Mathf.FloorToInt(transform.position.x),
+                                                          Mathf.FloorToInt(transform.position.y), 0)).name)))
             {
-                isMovingDelayed = true;
-                Invoke("RemoveDelay", delayTime);
+                float delayTime = MoveDelay[(tilemap.GetTile(new Vector3Int(Mathf.FloorToInt(transform.position.x),
+                                              Mathf.FloorToInt(transform.position.y), 0)).name)];
+                if (delayTime > 0)
+                {
+                    isMovingDelayed = true;
+                    Invoke("RemoveDelay", delayTime);
+                }
             }
         }
     }
@@ -128,5 +161,20 @@ public class Warrior : MonoBehaviour
     private void RemoveDelay()
     {
         isMovingDelayed = false;
+    }
+
+    private bool KeyHeldLongEnough()
+    {
+        if (isNoInput)
+        {
+            isNoInput = false;
+            holdKeyDelay = Time.time + HOLD_KEY_LENGTH;
+            return false;
+        }
+        else if (Time.time < holdKeyDelay)
+        {
+            return false;
+        }
+        return true;
     }
 }
