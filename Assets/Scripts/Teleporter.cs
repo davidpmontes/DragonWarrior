@@ -19,6 +19,11 @@ public class Teleporter : MonoBehaviour, ITeleporter
     [SerializeField]
     private Direction facingDirection;
 
+    private void Start()
+    {
+        GetComponent<SpriteRenderer>().enabled = false;
+    }
+
     public Tilemap GetTileMap()
     {
         return tilemap;

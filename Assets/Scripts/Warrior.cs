@@ -24,8 +24,14 @@ public class Warrior : MonoBehaviour
     private bool isNoInput;
     private float holdKeyDelay;
 
+    private bool inputEnabled;
+
+    public static Warrior Instance;
+
     private void Start()
     {
+        Instance = this;
+
         animator = GetComponent<Animator>();
 
         moveToLocation = transform.position;
@@ -39,6 +45,13 @@ public class Warrior : MonoBehaviour
 
     private void GetInput()
     {
+        if (!inputEnabled)
+        {
+            horizontal_input = 0;
+            vertical_input = 0;
+            return;
+        }
+
         if (Input.GetAxis("Horizontal") > 0)
             horizontal_input = 1;
         else if (Input.GetAxis("Horizontal") < 0)
@@ -113,24 +126,7 @@ public class Warrior : MonoBehaviour
 
             if (hit.collider)
             {
-                Grid.Instance.TeleportChangeMap(hit.collider.gameObject.GetComponent<ITeleporter>().GetTileMap());
-                transform.position = hit.collider.gameObject.GetComponent<ITeleporter>().GetLocation();
-                moveToLocation = transform.position;
-                switch (hit.collider.gameObject.GetComponent<ITeleporter>().GetFacingDirection())
-                {
-                    case Teleporter.Direction.LEFT:
-                        animator.Play("WalkLeft");
-                        break;
-                    case Teleporter.Direction.RIGHT:
-                        animator.Play("WalkRight");
-                        break;
-                    case Teleporter.Direction.UP:
-                        animator.Play("WalkUp");
-                        break;
-                    case Teleporter.Direction.DOWN:
-                        animator.Play("WalkDown");
-                        break;
-                }
+                GameController.Instance.WarriorCollision(hit.collider);
             }
 
             float delayTime = Grid.Instance.GetMoveDelay(transform.position);
@@ -139,6 +135,28 @@ public class Warrior : MonoBehaviour
                 isMovingDelayed = true;
                 Invoke("RemoveDelay", delayTime);
             }
+        }
+    }
+
+    public void TeleportToLocationAndFaceDirection(Vector2 newLocation, Teleporter.Direction direction)
+    {
+        transform.position = newLocation;
+        moveToLocation = transform.position;
+
+        switch (direction)
+        {
+            case Teleporter.Direction.LEFT:
+                animator.Play("WalkLeft");
+                break;
+            case Teleporter.Direction.RIGHT:
+                animator.Play("WalkRight");
+                break;
+            case Teleporter.Direction.UP:
+                animator.Play("WalkUp");
+                break;
+            case Teleporter.Direction.DOWN:
+                animator.Play("WalkDown");
+                break;
         }
     }
 
@@ -160,5 +178,10 @@ public class Warrior : MonoBehaviour
             return false;
         }
         return true;
+    }
+
+    public void SetInputEnabled(bool setting)
+    {
+        inputEnabled = setting;
     }
 }

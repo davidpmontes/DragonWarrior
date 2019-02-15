@@ -4,18 +4,6 @@ using UnityEngine.Tilemaps;
 
 public class Grid : MonoBehaviour
 {
-    public struct MapAndCoordinate
-    {
-        public string tilemap;
-        public Vector2 coordinate;
-
-        public MapAndCoordinate(string tilemap, Vector2 coordinate)
-        {
-            this.tilemap = tilemap;
-            this.coordinate = coordinate;
-        }
-    }
-
     public static Grid Instance;
 
     public Tilemap Overworld;
@@ -24,8 +12,6 @@ public class Grid : MonoBehaviour
     public Tilemap currentMap;
 
     private List<string> MoveableTiles;
-    private Dictionary<string, Tilemap> StringToTilemap;
-    private Dictionary<MapAndCoordinate, MapAndCoordinate> TeleportLookup;
     private Dictionary<string, float> MoveDelay;
 
     void Start()
@@ -55,19 +41,6 @@ public class Grid : MonoBehaviour
 
         MoveDelay = new Dictionary<string, float>();
         MoveDelay.Add("hills", 0.1f);
-
-        PopulateTeleportLookup();
-
-        StringToTilemap = new Dictionary<string, Tilemap>();
-        StringToTilemap.Add("Overworld", Overworld);
-        StringToTilemap.Add("Brecconary", Brecconary);
-    }
-
-    void PopulateTeleportLookup()
-    {
-        TeleportLookup = new Dictionary<MapAndCoordinate, MapAndCoordinate>();
-
-        TeleportLookup.Add(new MapAndCoordinate("BreconnaryInvisible", new Vector2(-9, -7)), new MapAndCoordinate("Overworld", new Vector2(4, 1)));
     }
 
     public float GetMoveDelay(Vector3 pos)
