@@ -11,7 +11,7 @@ public class Warrior : MonoBehaviour
 
     private bool isMoving;
     private bool isMovingDelayed;
-    private Vector3 moveLocation;
+    private Vector3 moveToLocation;
 
     private readonly float MOVE_SPEED = 3f;
     private readonly float HOLD_KEY_LENGTH = 0.1f;
@@ -28,7 +28,7 @@ public class Warrior : MonoBehaviour
     {
         animator = GetComponent<Animator>();
 
-        moveLocation = Vector2.zero;
+        moveToLocation = transform.position;
     }
 
     private void Update()
@@ -94,20 +94,44 @@ public class Warrior : MonoBehaviour
 
             if (Grid.Instance.TileIsMoveable(transform.position + newDirection))
             {
-                moveLocation += newDirection;
+                moveToLocation += newDirection;
             }
 
             isMoving = true;
         }
 
-        transform.position = Vector2.MoveTowards(transform.position, moveLocation, Time.deltaTime * MOVE_SPEED);
+        transform.position = Vector2.MoveTowards(transform.position, moveToLocation, Time.deltaTime * MOVE_SPEED);
 
-        if (Vector2.Distance(transform.position, moveLocation) < 0.01f)
+        if (Vector2.Distance(transform.position, moveToLocation) < 0.01f)
         {
-            transform.position = moveLocation;
+            transform.position = moveToLocation;
             isMoving = false;
 
-            transform.position = Grid.Instance.CheckTeleport(transform.position);
+            LayerMask layerMask = 1 << LayerMask.NameToLayer("teleports");
+
+            RaycastHit2D hit = Physics2D.BoxCast(transform.position + new Vector3(0.5f, 0.5f, 0), new Vector2(0.5f, 0.5f), 0, Vector2.zero, 0, layerMask);
+
+            if (hit.collider)
+            {
+                Grid.Instance.TeleportChangeMap(hit.collider.gameObject.GetComponent<ITeleporter>().GetTileMap());
+                transform.position = hit.collider.gameObject.GetComponent<ITeleporter>().GetLocation();
+                moveToLocation = transform.position;
+                switch (hit.collider.gameObject.GetComponent<ITeleporter>().GetFacingDirection())
+                {
+                    case Teleporter.Direction.LEFT:
+                        animator.Play("WalkLeft");
+                        break;
+                    case Teleporter.Direction.RIGHT:
+                        animator.Play("WalkRight");
+                        break;
+                    case Teleporter.Direction.UP:
+                        animator.Play("WalkUp");
+                        break;
+                    case Teleporter.Direction.DOWN:
+                        animator.Play("WalkDown");
+                        break;
+                }
+            }
 
             float delayTime = Grid.Instance.GetMoveDelay(transform.position);
             if (delayTime > 0)

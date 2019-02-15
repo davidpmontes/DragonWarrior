@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
@@ -20,13 +19,9 @@ public class Grid : MonoBehaviour
     public static Grid Instance;
 
     public Tilemap Overworld;
-    public Tilemap OverworldInvisible;
-
     public Tilemap Brecconary;
-    public Tilemap BrecconaryInvisible;
 
     public Tilemap currentMap;
-    public Tilemap invisibleMap;
 
     private List<string> MoveableTiles;
     private Dictionary<string, Tilemap> StringToTilemap;
@@ -36,9 +31,10 @@ public class Grid : MonoBehaviour
     void Start()
     {
         currentMap = Brecconary;
-        invisibleMap = BrecconaryInvisible;
 
         Instance = this;
+
+        //create a struct for each tile to handle movement slowdown, damage, passability
 
         MoveableTiles = new List<string>();
         MoveableTiles.Add("barrier");
@@ -95,21 +91,11 @@ public class Grid : MonoBehaviour
     }
 
 
-    public Vector2 CheckTeleport(Vector2 pos)
+    public void TeleportChangeMap(Tilemap newtilemap)
     {
-        TileBase t = invisibleMap.GetTile(new Vector3Int(Mathf.FloorToInt(pos.x),
-                                                Mathf.FloorToInt(pos.y), 0));
-
-        if (t != null && t.name == "teleport")
-        {
-            MapAndCoordinate destination = TeleportLookup[new MapAndCoordinate(invisibleMap.name, pos)];
-
-            currentMap.gameObject.SetActive(false);
-            currentMap = StringToTilemap[destination.tilemap];
-            invisibleMap = StringToTilemap[destination.tilemap].transform.GetChild(0).gameObject.GetComponent<Tilemap>();
-            currentMap.gameObject.SetActive(true);
-            return destination.coordinate;
-        }
-        return pos;
+        newtilemap.gameObject.SetActive(true);
+        var oldMap = currentMap;
+        currentMap = newtilemap;
+        oldMap.gameObject.SetActive(false);
     }
 }
